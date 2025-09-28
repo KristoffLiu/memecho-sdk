@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { MemEchoClient } from '../client'
-import { Memory, CreateMemoryRequest, UpdateMemoryRequest, SearchMemoryRequest, SearchMemoryResponse } from '../types'
+import { QueryData, QueryResult, MemoryLibraryInformation, MemoryLibraryList, AppendData, AppendResult, HealthResponse } from '../types'
 
 // 创建 MemEcho 客户端的 Hook
 export function useMemEchoClient(apiKey: string, baseUrl?: string) {
@@ -8,56 +8,47 @@ export function useMemEchoClient(apiKey: string, baseUrl?: string) {
   return client
 }
 
-// 获取单个记忆的 Hook
-export function useMemory(id: string, client: MemEchoClient) {
-  const [memory, setMemory] = useState<Memory | null>(null)
+// 健康检查 Hook
+export function useHealthCheck(client: MemEchoClient) {
+  const [health, setHealth] = useState<HealthResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMemory = useCallback(async () => {
-    if (!id) return
-    
+  const checkHealth = useCallback(async () => {
     setLoading(true)
     setError(null)
     
     try {
-      const response = await client.getMemory(id)
-      if (response.success && response.data) {
-        setMemory(response.data)
-      } else {
-        setError(response.error || 'Failed to fetch memory')
-      }
+      const response = await client.healthCheck()
+      setHealth(response)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
-  }, [id, client])
+  }, [client])
 
   useEffect(() => {
-    fetchMemory()
-  }, [fetchMemory])
+    checkHealth()
+  }, [checkHealth])
 
-  return { memory, loading, error, refetch: fetchMemory }
+  return { health, loading, error, refetch: checkHealth }
 }
 
-// 创建记忆的 Hook
-export function useCreateMemory(client: MemEchoClient) {
+// 内存查询 Hook
+export function useMemoryQuery(client: MemEchoClient) {
+  const [result, setResult] = useState<QueryResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const createMemory = useCallback(async (request: CreateMemoryRequest) => {
+  const queryMemory = useCallback(async (queryData: QueryData) => {
     setLoading(true)
     setError(null)
     
     try {
-      const response = await client.createMemory(request)
-      if (response.success) {
-        return response.data
-      } else {
-        setError(response.error || 'Failed to create memory')
-        return null
-      }
+      const response = await client.queryMemory(queryData)
+      setResult(response)
+      return response
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
       return null
@@ -66,30 +57,22 @@ export function useCreateMemory(client: MemEchoClient) {
     }
   }, [client])
 
-  return { createMemory, loading, error }
+  return { result, loading, error, queryMemory }
 }
 
-// 搜索记忆的 Hook
-export function useSearchMemories(client: MemEchoClient) {
-  const [memories, setMemories] = useState<Memory[]>([])
-  const [total, setTotal] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
+// 内存库列表 Hook
+export function useMemoryLibraries(client: MemEchoClient) {
+  const [libraries, setLibraries] = useState<MemoryLibraryList | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const searchMemories = useCallback(async (request: SearchMemoryRequest) => {
+  const fetchLibraries = useCallback(async () => {
     setLoading(true)
     setError(null)
     
     try {
-      const response = await client.searchMemories(request)
-      if (response.success && response.data) {
-        setMemories(response.data.memories)
-        setTotal(response.data.total)
-        setHasMore(response.data.hasMore)
-      } else {
-        setError(response.error || 'Failed to search memories')
-      }
+      const response = await client.listMemoryLibraries()
+      setLibraries(response)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -97,58 +80,55 @@ export function useSearchMemories(client: MemEchoClient) {
     }
   }, [client])
 
-  return { memories, total, hasMore, loading, error, searchMemories }
+  useEffect(() => {
+    fetchLibraries()
+  }, [fetchLibraries])
+
+  return { libraries, loading, error, refetch: fetchLibraries }
 }
 
-// 记忆列表的 Hook
-export function useMemoriesList(client: MemEchoClient, limit = 10) {
-  const [memories, setMemories] = useState<Memory[]>([])
+// 创建内存库 Hook
+export function useCreateMemoryLibrary(client: MemEchoClient) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [offset, setOffset] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
 
-  const fetchMemories = useCallback(async (reset = false) => {
-    const currentOffset = reset ? 0 : offset
-    
+  const createLibrary = useCallback(async (data: any) => {
     setLoading(true)
     setError(null)
     
     try {
-      const response = await client.listMemories(limit, currentOffset)
-      if (response.success && response.data) {
-        if (reset) {
-          setMemories(response.data)
-          setOffset(limit)
-        } else {
-          setMemories(prev => [...prev, ...response.data!])
-          setOffset(prev => prev + limit)
-        }
-        setHasMore(response.data.length === limit)
-      } else {
-        setError(response.error || 'Failed to fetch memories')
-      }
+      const response = await client.createMemoryLibrary(data)
+      return response
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
+      return null
     } finally {
       setLoading(false)
     }
-  }, [client, limit, offset])
+  }, [client])
 
-  const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      fetchMemories(false)
+  return { createLibrary, loading, error }
+}
+
+// 追加数据到内存库 Hook
+export function useAppendToMemoryLibrary(client: MemEchoClient) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const appendData = useCallback(async (data: AppendData) => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await client.appendToMemoryLibrary(data)
+      return response
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+      return null
+    } finally {
+      setLoading(false)
     }
-  }, [loading, hasMore, fetchMemories])
+  }, [client])
 
-  const refresh = useCallback(() => {
-    setOffset(0)
-    fetchMemories(true)
-  }, [fetchMemories])
-
-  useEffect(() => {
-    fetchMemories(true)
-  }, [client, limit])
-
-  return { memories, loading, error, hasMore, loadMore, refresh }
+  return { appendData, loading, error }
 }

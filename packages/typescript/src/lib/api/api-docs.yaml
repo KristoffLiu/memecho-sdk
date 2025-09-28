@@ -1,0 +1,618 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "ServiceHub API",
+        "description": "服务中心API接口",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "健康检查接口",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/query": {
+            "post": {
+                "summary": "Memory Query Endpoint",
+                "description": "内存查询API端点\n接收QueryData和API key，返回QueryResult",
+                "operationId": "memory_query_endpoint_api_v1_memory_query_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/QueryData"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/QueryResult"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/append-assistant-message": {
+            "post": {
+                "summary": "Append Assistant Message Endpoint",
+                "description": "追加AI助手消息API端点\n接收AppendData和API key，返回AppendResult",
+                "operationId": "append_assistant_message_endpoint_api_v1_memory_append_assistant_message_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppendData"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppendResult"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/create": {
+            "post": {
+                "summary": "Create Memory Library Endpoint",
+                "description": "创建记忆库API端点\n接收MemoryLibraryCreationData和API key，返回MemoryLibraryInformation",
+                "operationId": "create_memory_library_endpoint_api_v1_memory_create_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MemoryLibraryCreationData"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MemoryLibraryInformation"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/list": {
+            "get": {
+                "summary": "List Memory Libraries Endpoint",
+                "description": "列出记忆库API端点\n接收API key，返回MemoryLibraryList",
+                "operationId": "list_memory_libraries_endpoint_api_v1_memory_list_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MemoryLibraryList"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/memory/get": {
+            "post": {
+                "summary": "Get Memory Library Endpoint",
+                "description": "获取记忆库详情API端点\n接收MemoryLibraryGetRequest和API key，返回MemoryLibraryInformation",
+                "operationId": "get_memory_library_endpoint_api_v1_memory_get_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MemoryLibraryGetRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MemoryLibraryInformation"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AppendData": {
+                "properties": {
+                    "assistant_message": {
+                        "$ref": "#/components/schemas/Message"
+                    },
+                    "memory_lib_id": {
+                        "type": "string",
+                        "title": "Memory Lib Id"
+                    },
+                    "timezone": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Timezone"
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Language"
+                    },
+                    "user_time": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Time"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "assistant_message",
+                    "memory_lib_id"
+                ],
+                "title": "AppendData"
+            },
+            "AppendResult": {
+                "properties": {
+                    "result": {
+                        "type": "string",
+                        "enum": [
+                            "ok",
+                            "fail"
+                        ],
+                        "title": "Result"
+                    },
+                    "message_id": {
+                        "type": "string",
+                        "title": "Message Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "result",
+                    "message_id"
+                ],
+                "title": "AppendResult"
+            },
+            "Content": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "text",
+                            "file"
+                        ],
+                        "title": "Type"
+                    },
+                    "text": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Text"
+                    },
+                    "file_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "File Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "type"
+                ],
+                "title": "Content"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "title": "Timestamp"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "message",
+                    "timestamp",
+                    "version"
+                ],
+                "title": "HealthResponse",
+                "description": "健康检查响应模型"
+            },
+            "MemoryLibraryCreationData": {
+                "properties": {
+                    "alias": {
+                        "type": "string",
+                        "title": "Alias"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "alias"
+                ],
+                "title": "MemoryLibraryCreationData"
+            },
+            "MemoryLibraryGetRequest": {
+                "properties": {
+                    "memory_lib_id": {
+                        "type": "string",
+                        "title": "Memory Lib Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "memory_lib_id"
+                ],
+                "title": "MemoryLibraryGetRequest",
+                "description": "获取记忆库详情请求模型"
+            },
+            "MemoryLibraryInformation": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "title": "Alias"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "title": "Size",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "alias"
+                ],
+                "title": "MemoryLibraryInformation"
+            },
+            "MemoryLibraryList": {
+                "properties": {
+                    "memory_libs": {
+                        "items": {
+                            "$ref": "#/components/schemas/MemoryLibraryInformation"
+                        },
+                        "type": "array",
+                        "title": "Memory Libs"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "memory_libs"
+                ],
+                "title": "MemoryLibraryList"
+            },
+            "Message": {
+                "properties": {
+                    "content": {
+                        "items": {
+                            "$ref": "#/components/schemas/Content"
+                        },
+                        "type": "array",
+                        "title": "Content"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "assistant"
+                        ],
+                        "title": "Role"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content",
+                    "role"
+                ],
+                "title": "Message"
+            },
+            "OutboundMessage": {
+                "properties": {
+                    "content": {
+                        "items": {
+                            "$ref": "#/components/schemas/Content"
+                        },
+                        "type": "array",
+                        "title": "Content"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "assistant",
+                            "tool",
+                            "function"
+                        ],
+                        "title": "Role"
+                    },
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content",
+                    "role",
+                    "id"
+                ],
+                "title": "OutboundMessage"
+            },
+            "QueryData": {
+                "properties": {
+                    "query": {
+                        "$ref": "#/components/schemas/Message"
+                    },
+                    "memory_lib_id": {
+                        "type": "string",
+                        "title": "Memory Lib Id"
+                    },
+                    "timezone": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Timezone"
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Language"
+                    },
+                    "user_time": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Time"
+                    },
+                    "readonly": {
+                        "type": "boolean",
+                        "title": "Readonly",
+                        "default": false
+                    },
+                    "include_user_query": {
+                        "type": "boolean",
+                        "title": "Include User Query",
+                        "default": true
+                    },
+                    "require_raw_recall_message_id_list": {
+                        "type": "boolean",
+                        "title": "Require Raw Recall Message Id List",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query",
+                    "memory_lib_id"
+                ],
+                "title": "QueryData"
+            },
+            "QueryResult": {
+                "properties": {
+                    "ready_messages": {
+                        "items": {
+                            "$ref": "#/components/schemas/OutboundMessage"
+                        },
+                        "type": "array",
+                        "title": "Ready Messages"
+                    },
+                    "message_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message Id"
+                    },
+                    "recall_message_id_list": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Recall Message Id List"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ready_messages",
+                    "message_id",
+                    "recall_message_id_list"
+                ],
+                "title": "QueryResult"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

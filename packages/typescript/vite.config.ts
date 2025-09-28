@@ -18,7 +18,8 @@ export default defineConfig({
         index: resolve(__dirname, 'src/index.ts'),
         client: resolve(__dirname, 'src/client/index.ts'),
         hooks: resolve(__dirname, 'src/hooks/index.ts'),
-        types: resolve(__dirname, 'src/types/index.ts')
+        types: resolve(__dirname, 'src/types/index.ts'),
+        api: resolve(__dirname, 'src/lib/api/generated/index.ts')
       },
       formats: ['es'],
       fileName: (format, entryName) => `${entryName}.js`

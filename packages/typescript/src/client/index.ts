@@ -1,76 +1,56 @@
-import { MemEchoConfig, MemEchoResponse, Memory, CreateMemoryRequest, UpdateMemoryRequest, SearchMemoryRequest, SearchMemoryResponse } from '../types'
+import { Configuration, DefaultApi } from '../lib/api/generated'
+import { MemEchoConfig } from '../types'
 
 export class MemEchoClient {
-  private apiKey: string
-  private baseUrl: string
-  private timeout: number
+  private api: DefaultApi
+  private configuration: Configuration
 
   constructor(config: MemEchoConfig) {
-    this.apiKey = config.apiKey
-    this.baseUrl = config.baseUrl || 'https://api.memecho.com'
-    this.timeout = config.timeout || 10000
-  }
-
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<MemEchoResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-        ...options.headers,
-      },
-      signal: AbortSignal.timeout(this.timeout),
+    this.configuration = new Configuration({
+      basePath: config.baseUrl || 'https://api.memecho.com',
+      apiKey: config.apiKey,
+      timeout: config.timeout || 10000,
     })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    return response.json()
+    this.api = new DefaultApi(this.configuration)
   }
 
-  async createMemory(request: CreateMemoryRequest): Promise<MemEchoResponse<Memory>> {
-    return this.request<Memory>('/memories', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    })
+  // 健康检查
+  async healthCheck() {
+    return this.api.healthCheckHealthGet()
   }
 
-  async getMemory(id: string): Promise<MemEchoResponse<Memory>> {
-    return this.request<Memory>(`/memories/${id}`)
+  // 内存查询
+  async queryMemory(queryData: any) {
+    return this.api.memoryQueryEndpointApiV1MemoryQueryPost(queryData)
   }
 
-  async updateMemory(id: string, request: UpdateMemoryRequest): Promise<MemEchoResponse<Memory>> {
-    return this.request<Memory>(`/memories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(request),
-    })
+  // 获取内存库信息
+  async getMemoryLibrary(request: any) {
+    return this.api.getMemoryLibraryApiV1MemoryLibraryGet(request)
   }
 
-  async deleteMemory(id: string): Promise<MemEchoResponse<void>> {
-    return this.request<void>(`/memories/${id}`, {
-      method: 'DELETE',
-    })
+  // 创建内存库
+  async createMemoryLibrary(data: any) {
+    return this.api.createMemoryLibraryApiV1MemoryLibraryPost(data)
   }
 
-  async searchMemories(request: SearchMemoryRequest): Promise<MemEchoResponse<SearchMemoryResponse>> {
-    const params = new URLSearchParams({
-      q: request.query,
-      limit: request.limit?.toString() || '10',
-      offset: request.offset?.toString() || '0',
-    })
-
-    return this.request<SearchMemoryResponse>(`/memories/search?${params}`)
+  // 列出内存库
+  async listMemoryLibraries() {
+    return this.api.listMemoryLibrariesApiV1MemoryLibraryListGet()
   }
 
-  async listMemories(limit = 10, offset = 0): Promise<MemEchoResponse<Memory[]>> {
-    const params = new URLSearchParams({
-      limit: limit.toString(),
-      offset: offset.toString(),
-    })
+  // 追加数据到内存库
+  async appendToMemoryLibrary(data: any) {
+    return this.api.appendToMemoryLibraryApiV1MemoryLibraryAppendPost(data)
+  }
 
-    return this.request<Memory[]>(`/memories?${params}`)
+  // 获取原始 API 实例（用于高级用法）
+  getApi() {
+    return this.api
+  }
+
+  // 获取配置实例
+  getConfiguration() {
+    return this.configuration
   }
 }

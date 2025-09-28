@@ -1,31 +1,51 @@
 import React, { useState } from 'react'
-import { useMemEchoClient, useSearchMemories, useCreateMemory } from 'memecho-sdk'
+import { useMemEchoClient, useMemoryQuery, useMemoryLibraries, useCreateMemoryLibrary, useAppendToMemoryLibrary } from 'memecho-sdk'
 import './App.css'
 
 function App() {
   const [apiKey, setApiKey] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [newMemory, setNewMemory] = useState('')
+  const [queryText, setQueryText] = useState('')
+  const [libraryName, setLibraryName] = useState('')
+  const [appendText, setAppendText] = useState('')
   
   const client = useMemEchoClient(apiKey)
-  const { memories, loading: searchLoading, searchMemories } = useSearchMemories(client)
-  const { createMemory, loading: createLoading } = useCreateMemory(client)
+  const { result, loading: queryLoading, queryMemory } = useMemoryQuery(client)
+  const { libraries, loading: librariesLoading, refetch: refetchLibraries } = useMemoryLibraries(client)
+  const { createLibrary, loading: createLoading } = useCreateMemoryLibrary(client)
+  const { appendData, loading: appendLoading } = useAppendToMemoryLibrary(client)
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      searchMemories({ query: searchQuery, limit: 10 })
+  const handleQuery = () => {
+    if (queryText.trim()) {
+      queryMemory({
+        query: queryText,
+        library_id: libraries?.libraries?.[0]?.id || ''
+      })
     }
   }
 
-  const handleCreateMemory = async () => {
-    if (newMemory.trim()) {
-      const result = await createMemory({
-        content: newMemory,
-        metadata: { source: 'react-example' }
+  const handleCreateLibrary = async () => {
+    if (libraryName.trim()) {
+      const result = await createLibrary({
+        name: libraryName,
+        description: 'Created from React example'
       })
       if (result) {
-        setNewMemory('')
-        alert('记忆创建成功！')
+        setLibraryName('')
+        alert('内存库创建成功！')
+        refetchLibraries()
+      }
+    }
+  }
+
+  const handleAppendData = async () => {
+    if (appendText.trim() && libraries?.libraries?.[0]?.id) {
+      const result = await appendData({
+        library_id: libraries.libraries[0].id,
+        content: appendText
+      })
+      if (result) {
+        setAppendText('')
+        alert('数据追加成功！')
       }
     }
   }
@@ -49,68 +69,90 @@ function App() {
         </div>
 
         <div className="create-section">
-          <h2>创建记忆</h2>
+          <h2>创建内存库</h2>
           <div className="create-form">
-            <textarea
-              placeholder="输入记忆内容..."
-              value={newMemory}
-              onChange={(e) => setNewMemory(e.target.value)}
-              className="memory-input"
-            />
-            <button
-              onClick={handleCreateMemory}
-              disabled={!newMemory.trim() || createLoading}
-              className="create-button"
-            >
-              {createLoading ? '创建中...' : '创建记忆'}
-            </button>
-          </div>
-        </div>
-
-        <div className="search-section">
-          <h2>搜索记忆</h2>
-          <div className="search-form">
             <input
               type="text"
-              placeholder="输入搜索关键词..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
+              placeholder="输入内存库名称..."
+              value={libraryName}
+              onChange={(e) => setLibraryName(e.target.value)}
+              className="library-input"
             />
             <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || searchLoading}
-              className="search-button"
+              onClick={handleCreateLibrary}
+              disabled={!libraryName.trim() || createLoading}
+              className="create-button"
             >
-              {searchLoading ? '搜索中...' : '搜索'}
+              {createLoading ? '创建中...' : '创建内存库'}
             </button>
           </div>
         </div>
 
-        <div className="results-section">
-          <h2>搜索结果</h2>
-          {memories.length > 0 ? (
-            <div className="memories-list">
-              {memories.map((memory) => (
-                <div key={memory.id} className="memory-item">
-                  <div className="memory-content">{memory.content}</div>
-                  <div className="memory-meta">
-                    <span className="memory-date">
-                      {new Date(memory.createdAt).toLocaleString()}
-                    </span>
-                    {memory.metadata?.tags && (
-                      <div className="memory-tags">
-                        {memory.metadata.tags.map((tag: string, index: number) => (
-                          <span key={index} className="tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+        <div className="append-section">
+          <h2>追加数据</h2>
+          <div className="append-form">
+            <textarea
+              placeholder="输入要追加的内容..."
+              value={appendText}
+              onChange={(e) => setAppendText(e.target.value)}
+              className="append-input"
+            />
+            <button
+              onClick={handleAppendData}
+              disabled={!appendText.trim() || appendLoading || !libraries?.libraries?.[0]?.id}
+              className="append-button"
+            >
+              {appendLoading ? '追加中...' : '追加数据'}
+            </button>
+          </div>
+        </div>
+
+        <div className="query-section">
+          <h2>查询内存</h2>
+          <div className="query-form">
+            <input
+              type="text"
+              placeholder="输入查询内容..."
+              value={queryText}
+              onChange={(e) => setQueryText(e.target.value)}
+              className="query-input"
+            />
+            <button
+              onClick={handleQuery}
+              disabled={!queryText.trim() || queryLoading || !libraries?.libraries?.[0]?.id}
+              className="query-button"
+            >
+              {queryLoading ? '查询中...' : '查询'}
+            </button>
+          </div>
+        </div>
+
+        <div className="libraries-section">
+          <h2>内存库列表</h2>
+          {librariesLoading ? (
+            <p>加载中...</p>
+          ) : libraries?.libraries?.length > 0 ? (
+            <div className="libraries-list">
+              {libraries.libraries.map((library) => (
+                <div key={library.id} className="library-item">
+                  <div className="library-name">{library.name}</div>
+                  <div className="library-description">{library.description}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="no-results">暂无搜索结果</p>
+            <p className="no-results">暂无内存库</p>
+          )}
+        </div>
+
+        <div className="results-section">
+          <h2>查询结果</h2>
+          {result ? (
+            <div className="query-result">
+              <pre>{JSON.stringify(result, null, 2)}</pre>
+            </div>
+          ) : (
+            <p className="no-results">暂无查询结果</p>
           )}
         </div>
       </main>
