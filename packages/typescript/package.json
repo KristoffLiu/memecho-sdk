@@ -32,7 +32,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build": "vite build && tsc --emitDeclarationOnly --noUnusedLocals false --noUnusedParameters false",
     "dev": "vite build --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",

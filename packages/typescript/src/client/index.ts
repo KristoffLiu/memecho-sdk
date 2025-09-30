@@ -9,7 +9,6 @@ export class MemEchoClient {
     this.configuration = new Configuration({
       basePath: config.baseUrl || 'https://api.memecho.com',
       apiKey: config.apiKey,
-      timeout: config.timeout || 10000,
     })
     this.api = new DefaultApi(this.configuration)
   }
@@ -26,22 +25,22 @@ export class MemEchoClient {
 
   // 获取内存库信息
   async getMemoryLibrary(request: any) {
-    return this.api.getMemoryLibraryApiV1MemoryLibraryGet(request)
+    return this.api.getMemoryLibraryEndpointApiV1MemoryGetPost(request)
   }
 
   // 创建内存库
   async createMemoryLibrary(data: any) {
-    return this.api.createMemoryLibraryApiV1MemoryLibraryPost(data)
+    return this.api.createMemoryLibraryEndpointApiV1MemoryCreatePost(data)
   }
 
   // 列出内存库
   async listMemoryLibraries() {
-    return this.api.listMemoryLibrariesApiV1MemoryLibraryListGet()
+    return this.api.listMemoryLibrariesEndpointApiV1MemoryListGet()
   }
 
   // 追加数据到内存库
   async appendToMemoryLibrary(data: any) {
-    return this.api.appendToMemoryLibraryApiV1MemoryLibraryAppendPost(data)
+    return this.api.appendAssistantMessageEndpointApiV1MemoryAppendAssistantMessagePost(data)
   }
 
   // 获取原始 API 实例（用于高级用法）
