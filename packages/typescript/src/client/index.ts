@@ -9,8 +9,38 @@ export class MemEchoClient {
     this.configuration = new Configuration({
       basePath: config.baseUrl || 'https://api.memecho.com',
       apiKey: config.apiKey,
+      // 添加默认的认证头
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json'
+      }
     })
     this.api = new DefaultApi(this.configuration)
+    
+    // 重写 API 方法以确保认证头正确应用
+    this.overrideApiMethods()
+  }
+
+  private overrideApiMethods() {
+    const api = this.api as any
+    const originalRequest = api.request?.bind(api)
+    
+    if (originalRequest) {
+      api.request = async (context: any, initOverrides?: any) => {
+        // 确保有 headers 对象
+        if (!context.headers) {
+          context.headers = {}
+        }
+        
+        // 强制添加认证头
+        const apiKey = this.configuration.apiKey
+        const keyValue = typeof apiKey === 'function' ? apiKey('') : apiKey || ''
+        context.headers['Authorization'] = `Bearer ${keyValue}`
+        context.headers['Content-Type'] = 'application/json'
+        
+        return originalRequest(context, initOverrides)
+      }
+    }
   }
 
   // 健康检查

@@ -1,7 +1,7 @@
 {
   "name": "memecho-sdk",
-  "version": "1.0.0",
-  "description": "MemEcho SDK for TypeScript/JavaScript",
+  "version": "1.0.2",
+  "description": "MemEcho SDK for TypeScript/JavaScript - 为AI聊天机器人提供记忆管理功能",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
