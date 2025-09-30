@@ -50,7 +50,9 @@ export class MemEchoClient {
 
   // 内存查询
   async queryMemory(queryData: any) {
-    return this.api.memoryQueryEndpointApiV1MemoryQueryPost(queryData)
+    console.log('[SDK Debug] queryMemory 接收参数:', queryData)
+    console.log('[SDK Debug] 包装后参数:', { queryData })
+    return this.api.memoryQueryEndpointApiV1MemoryQueryPost({ queryData })
   }
 
   // 获取内存库信息
@@ -60,7 +62,7 @@ export class MemEchoClient {
 
   // 创建内存库
   async createMemoryLibrary(data: any) {
-    return this.api.createMemoryLibraryEndpointApiV1MemoryCreatePost(data)
+    return this.api.createMemoryLibraryEndpointApiV1MemoryCreatePost({ memoryLibraryCreationData: data })
   }
 
   // 列出内存库
@@ -70,7 +72,7 @@ export class MemEchoClient {
 
   // 追加数据到内存库
   async appendToMemoryLibrary(data: any) {
-    return this.api.appendAssistantMessageEndpointApiV1MemoryAppendAssistantMessagePost(data)
+    return this.api.appendAssistantMessageEndpointApiV1MemoryAppendAssistantMessagePost({ appendData: data })
   }
 
   // 获取原始 API 实例（用于高级用法）
