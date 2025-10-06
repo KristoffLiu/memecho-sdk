@@ -29,7 +29,7 @@ yarn-error.log*
 .eslintcache
 
 # Generated API code
-src/lib/api/generated/
+# src/lib/api/generated/
 
 # OpenAPI Generator cache
 .openapi-generator/

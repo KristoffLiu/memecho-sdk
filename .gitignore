@@ -104,7 +104,7 @@ Thumbs.db
 .turbo
 
 # Generated API code (keep the source, ignore generated)
-packages/*/src/lib/api/generated/
+# packages/*/src/lib/api/generated/
 
 # OpenAPI Generator cache
 .openapi-generator/
