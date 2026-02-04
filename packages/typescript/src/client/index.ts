@@ -81,11 +81,27 @@ export class MemEchoClient {
     memoryLibId: string,
     onProgress?: (event: { type: string; stage?: string; progress?: number; message?: string; extra_data?: any; error?: string }) => void
   ): Promise<string> {
+    return this._importFileInternal('/api/v1/memory/import_file', fileUrl, memoryLibId, onProgress)
+  }
+
+  // 快速导入文件到内存库 (SSE) - memecho服务方提供的高速通道
+  async importFileFast(
+    fileUrl: string,
+    memoryLibId: string,
+    onProgress?: (event: { type: string; stage?: string; progress?: number; message?: string; extra_data?: any; error?: string }) => void
+  ): Promise<string> {
+    return this._importFileInternal('/api/v1/memory/import_file_fast', fileUrl, memoryLibId, onProgress)
+  }
+
+  private async _importFileInternal(
+    endpoint: string,
+    fileUrl: string,
+    memoryLibId: string,
+    onProgress?: (event: { type: string; stage?: string; progress?: number; message?: string; extra_data?: any; error?: string }) => void
+  ): Promise<string> {
     const api = this.api as any
-    // 手动构建请求，因为生成的 SDK 中尚未包含此端点
-    // overrideApiMethods 中已经处理了 Authorization header 的注入
     const response = await api.request({
-      path: '/api/v1/memory/import_file',
+      path: endpoint,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
