@@ -16,7 +16,7 @@ export class MemEchoClient {
       }
     })
     this.api = new DefaultApi(this.configuration)
-    
+
     // 重写 API 方法以确保认证头正确应用
     this.overrideApiMethods()
   }
@@ -24,20 +24,20 @@ export class MemEchoClient {
   private overrideApiMethods() {
     const api = this.api as any
     const originalRequest = api.request?.bind(api)
-    
+
     if (originalRequest) {
       api.request = async (context: any, initOverrides?: any) => {
         // 确保有 headers 对象
         if (!context.headers) {
           context.headers = {}
         }
-        
+
         // 强制添加认证头
         const apiKey = this.configuration.apiKey
         const keyValue = typeof apiKey === 'function' ? apiKey('') : apiKey || ''
         context.headers['Authorization'] = `Bearer ${keyValue}`
         context.headers['Content-Type'] = 'application/json'
-        
+
         return originalRequest(context, initOverrides)
       }
     }
@@ -73,6 +73,78 @@ export class MemEchoClient {
   // 追加数据到内存库
   async appendToMemoryLibrary(data: any) {
     return this.api.appendAssistantMessageEndpointApiV1MemoryAppendAssistantMessagePost({ appendData: data })
+  }
+
+  // 导入文件到内存库 (SSE)
+  async importFile(
+    fileUrl: string,
+    memoryLibId: string,
+    onProgress?: (event: { type: string; stage?: string; progress?: number; message?: string; extra_data?: any; error?: string }) => void
+  ): Promise<string> {
+    const api = this.api as any
+    // 手动构建请求，因为生成的 SDK 中尚未包含此端点
+    // overrideApiMethods 中已经处理了 Authorization header 的注入
+    const response = await api.request({
+      path: '/api/v1/memory/import_file',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: {
+        file_url: fileUrl,
+        memory_lib_id: memoryLibId
+      }
+    })
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`File import failed: ${response.status} ${response.statusText}`)
+    }
+
+    if (!response.body) {
+      throw new Error('No response body for file import')
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalMessageId = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+
+        try {
+          const jsonStr = trimmed.substring(6).trim();
+          if (!jsonStr) continue;
+
+          const event = JSON.parse(jsonStr);
+          onProgress?.(event);
+
+          if (event.type === 'progress' && event.stage === 'completed') {
+            if (event.extra_data && event.extra_data.message_id) {
+              finalMessageId = event.extra_data.message_id;
+            }
+          }
+          if (event.type === 'error') {
+            throw new Error(event.error || 'Unknown Memoria Error');
+          }
+        } catch (e) {
+          console.warn('[SDK] Parse SSE error:', e);
+          if (e instanceof Error && e.message === 'Unknown Memoria Error') {
+            throw e;
+          }
+        }
+      }
+    }
+    return finalMessageId;
   }
 
   // 获取原始 API 实例（用于高级用法）
